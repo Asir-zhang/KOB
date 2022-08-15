@@ -53,8 +53,8 @@ public class RegisterServiceImpl implements RegisterService {
         QueryWrapper<User> queryWrapper = new QueryWrapper<User>();
         queryWrapper.eq("username",username);
         List<User> list = userMapper.selectList(queryWrapper);
-        if(list != null){
-            map.put("error_message","用户名已经存在");
+        if(list.size() != 0){
+            map.put("error_message","用户已存在");
             return map;
         }
 
@@ -62,7 +62,7 @@ public class RegisterServiceImpl implements RegisterService {
         User user = new User(null,username,new BCryptPasswordEncoder().encode(password),photo);
         userMapper.insert(user);
 
-        map.put("error_message","注册成功");
+        map.put("error_message","success");
         return map;
     }
 }

@@ -1,5 +1,5 @@
 <template>
-    <ContentField>
+    <ContentField v-if="show_content">
         <div class="row justify-content-md-center">
             <div class="col-3">
                 <form @submit.prevent="login">
@@ -34,7 +34,22 @@ export default {
         let username = ref('');
         let password = ref('');
         let error_message = ref('');
+        let show_content = false;
 
+        const jwt_token = localStorage.getItem("jwt_token");
+        if(jwt_token){
+            store.commit("updateToken",jwt_token);
+            store.dispatch("getinfo",{
+                success(){
+                    router.push({ name: "home" });
+                },
+                error(){
+                    show_content = true;
+                },
+            });
+        } else {
+            show_content = true;
+        }
         const login = () => {
             error_message.value = "";
             error_message.value = "";
@@ -60,6 +75,7 @@ export default {
             password,
             error_message,
             login,
+            show_content,
         }
     },
 }
