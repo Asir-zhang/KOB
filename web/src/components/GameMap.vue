@@ -1,4 +1,7 @@
 <template>
+    <div class="info">
+        <button class="btn btn-warning btn-lg">hhh</button>
+    </div>
     <div ref="parent" class="gamemap">
         <canvas ref="canvas" tabindex="0">
         </canvas>
@@ -17,9 +20,11 @@ export default {
         let canvas = ref(null);
 
         onMounted(() => {
-            new GameMap(canvas.value.getContext('2d'), parent.value,store)
+            store.commit("updateGameObject",
+                new GameMap(canvas.value.getContext('2d'), parent.value,store)
+            );
         });
-        
+
         return {
             parent,
             canvas
@@ -37,5 +42,9 @@ div.gamemap {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+div.info{
+    padding-left: 50%;
+    margin-top: 5px;
 }
 </style>
