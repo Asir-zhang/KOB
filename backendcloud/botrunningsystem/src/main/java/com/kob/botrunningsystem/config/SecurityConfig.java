@@ -1,4 +1,4 @@
-package com.kob.matchingsystem.config;
+package com.kob.botrunningsystem.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,7 +18,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/player/add/","/player/remove/").hasIpAddress("127.0.0.1")     //放行处
+                .antMatchers("/bot/add/").hasIpAddress("127.0.0.1")     //放行处
                 .antMatchers(HttpMethod.OPTIONS).permitAll()
                 .anyRequest().authenticated();
     }

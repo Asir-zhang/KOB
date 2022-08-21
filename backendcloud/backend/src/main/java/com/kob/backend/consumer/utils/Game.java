@@ -2,7 +2,10 @@ package com.kob.backend.consumer.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.kob.backend.consumer.WebSocketServer;
+import com.kob.backend.pojo.Bot;
 import com.kob.backend.pojo.Record;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -22,14 +25,28 @@ public class Game extends Thread{
     private ReentrantLock lock = new ReentrantLock();
     private String status = "playing";      //存储游戏的状态，一开始表示进行中 playing -> finished
     private String loser = "";      //all：平局 A：A输 B：B输
+    private static final String addBotUrl = "http://127.0.0.1:8083/bot/add/";        //定义向BotRunningSystem服务发送的地址
 
-    public Game(Integer rows, Integer cols, Integer inner_wall_count,Integer idA,Integer idB) {
+    public Game(Integer rows, Integer cols, Integer inner_wall_count,
+                Integer idA, Bot botA,
+                Integer idB, Bot botB) {
         this.rows = rows;
         this.cols = cols;
         this.inner_wall_count = inner_wall_count;
         this.g = new int[rows][cols];
-        playerA = new Player(idA,rows-2,1,new ArrayList<>());
-        playerB = new Player(idB,1,cols-2,new ArrayList<>());
+
+        Integer botIdA = -1,botIdB = -1;
+        String botCodeA = "",botCodeB = "";
+        if(botA != null){       //根据传入的bot信息确定id和code
+            botIdA = botA.getId();
+            botCodeA = botA.getContent();
+        }
+        if(botB != null){
+            botIdB = botB.getId();
+            botCodeB = botB.getContent();
+        }
+        playerA = new Player(idA,botIdA,botCodeA,rows-2,1,new ArrayList<>());
+        playerB = new Player(idB,botIdB,botCodeB,1,cols-2,new ArrayList<>());
     }
 
     public int[][] getG() {
@@ -100,7 +117,7 @@ public class Game extends Thread{
         return playerB;
     }
 
-    public void setNextStepA(Integer nextStepA){        //外面需要写入这个值，内部也会调用这个值，所以涉及到了线程同步
+    public void setNextStepA(Integer nextStepA){        //设置下一步操作，外面需要写入这个值，内部也会调用这个值，所以涉及到了线程同步
         lock.lock();
         try{
             this.nextStepA = nextStepA;
@@ -118,7 +135,47 @@ public class Game extends Thread{
         }
     }
 
+    private String getInput(Player player){      //辅助函数，将当前的局面编码成字符串传到BotRunningSystem
+        //String格式:
+        //地图信息#我的起始x坐标#我的起始y坐标#我的操作序列#对手的起始x坐标#对手的起始y坐标#对手的操作序列
+        Player me,you;
+        if(playerA.getId().equals(player.getId())){
+            me = playerA;
+            you = playerB;
+        } else {
+            me = playerB;
+            you = playerA;
+        }
+        return getMapString()+"#"+
+                me.getSx()+"#"+
+                me.getSy()+"#("+        //因为操作序列为空，所以在使用split函数的时候无法达到要求，故加上一个括号
+                me.getStepsString()+")#"+
+                you.getSx()+"#"+
+                you.getSy()+"#("+
+                you.getStepsString()+")";
+    }
+
+    private void sendBotCode(Player player){        //是否是由bot来执行，是的话就向另一个服务发送执行代码
+        if(player.getBotId().equals(-1)) return;        //人亲自操作
+        MultiValueMap<String,String> data = new LinkedMultiValueMap<>();
+        data.add("user_id",player.getId().toString());
+        data.add("bot_code",player.getBotCode());
+        data.add("input",getInput(player));
+        WebSocketServer.restTemplate.postForObject(addBotUrl,data,String.class);
+    }
+
     private boolean nextStep(){     //等待两名玩家的下一步操作
+//这一步是非常必须的，要不然可能会造成前端来不及绘图就结束的情况
+/*原因详解：消息发送过快，前端未及时绘图，数据丢失
+* */
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        sendBotCode(playerA);
+        sendBotCode(playerB);
+
         for(int i = 0;i < 50;i++){
             try{
                 Thread.sleep(100);
@@ -206,7 +263,7 @@ public class Game extends Thread{
         return res.toString();
     }
 
-    private void saveToDatabase(){
+    private void saveToDatabase(){      //保存对局信息
         Record record = new Record(
                 null,
                 playerA.getId(),
@@ -225,10 +282,12 @@ public class Game extends Thread{
     }
 
     private void sendAllMessage(String message){
-        if(WebSocketServer.users.get(playerA.getId()) != null)
+        if(WebSocketServer.users.get(playerA.getId()) != null){
             WebSocketServer.users.get(playerA.getId()).sendMessage(message);
-        if(WebSocketServer.users.get(playerB.getId()) != null)
+        }
+        if(WebSocketServer.users.get(playerB.getId()) != null){
             WebSocketServer.users.get(playerB.getId()).sendMessage(message);
+        }
     }
 
     @Override
@@ -247,7 +306,7 @@ public class Game extends Thread{
                 //凡是要读或写nextStepA\nextStepB都需要加锁
                 lock.lock();
                 try{
-                    if(nextStepA == null && nextStepB == null){     //这里可能会有问题就是在nextStep()函数返回false的情况下可能恰好输入，那么我们可以v不处理这个特殊情况
+                    if(nextStepA == null && nextStepB == null){     //这里可能会有问题就是在nextStep()函数返回false的情况下可能恰好输入，那么我们可以不处理这个特殊情况
                         loser = "all";
                     } else if(nextStepA == null){
                         loser = "A";

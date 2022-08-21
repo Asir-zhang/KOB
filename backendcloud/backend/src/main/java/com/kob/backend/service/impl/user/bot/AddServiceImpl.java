@@ -30,7 +30,7 @@ public class AddServiceImpl implements AddService {
         String title = data.get("title");
         String description = data.get("description");
         String content = data.get("content");
-
+        //这个方法是添加机器人，下面是添加的一些具体信息
         Map<String,String> map = new HashMap<>();
         if(title == null || title.length() == 0){
             map.put("error_message","标题不能为空");

@@ -12,6 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 public class Player {
     private Integer id;
+    private Integer botId;      //为-1的话表示自己玩
+    private String botCode;
     private Integer sx;     //起始坐标
     private Integer sy;
     private List<Integer> steps;        //每一步的方向

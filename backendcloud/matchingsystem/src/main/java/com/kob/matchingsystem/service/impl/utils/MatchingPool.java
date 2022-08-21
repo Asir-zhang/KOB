@@ -17,18 +17,18 @@ public class MatchingPool extends Thread{
     private static List<Player> players = new ArrayList<>();
     private ReentrantLock lock = new ReentrantLock();
     private static RestTemplate restTemplate;
-    private static final String resultUrl = "http://localhost:8081/pk/start/game/";
+    private static final String resultUrl = "http://127.0.0.1:8081/pk/start/game/";
 
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate){
         MatchingPool.restTemplate = restTemplate;
     }
 
-    public void addPlayer(Integer userId,Integer rating){
+    public void addPlayer(Integer userId,Integer rating,Integer botId){
         //players可以被多个线程读写
         lock.lock();
         try{
-            players.add(new Player(userId,rating,0));
+            players.add(new Player(userId,rating,botId,0));
         } finally{
             lock.unlock();
         }
@@ -66,7 +66,10 @@ public class MatchingPool extends Thread{
         //System.out.println("send result:"+ a.getUserId() + "   "+b.getUserId());
         MultiValueMap<String,String> data = new LinkedMultiValueMap<>();
         data.put("a_id", Collections.singletonList(a.getUserId().toString()));
+        data.put("a_bot_id", Collections.singletonList(a.getBotId().toString()));
         data.put("b_id", Collections.singletonList(b.getUserId().toString()));
+        data.put("b_bot_id", Collections.singletonList(b.getBotId().toString()));
+
         restTemplate.postForObject(resultUrl,data,String.class);
     }
 

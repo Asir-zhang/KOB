@@ -29,7 +29,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain) throws ServletException, IOException {
         String token = request.getHeader("Authorization");      //Authorization是前端发请求请求头里面的一个信息
 
-        if (!StringUtils.hasText(token) || !token.startsWith("Asir ")) {      //前端发来的token需要带上前缀,可以自己定义，但是下面会去掉（37行）
+        if (!StringUtils.hasText(token) || !token.startsWith("Asir ")) {      //前端发来的token需要带上前缀,可以自己定义，但是下面会改变（37行）
             filterChain.doFilter(request, response);
             return;
         }

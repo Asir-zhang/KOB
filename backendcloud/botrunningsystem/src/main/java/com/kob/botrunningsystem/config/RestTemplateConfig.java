@@ -1,11 +1,11 @@
-package com.kob.backend.config;
+package com.kob.botrunningsystem.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-public class RestTemplateConfig {           //返回一个工具：在我们的两个工程间通信
+public class RestTemplateConfig {           //返回一个工具：在我们的两个bot工程间通信
     //返回一个类，这个类是springframework.web.client.RestTemplate，具有发送http消息的功能
     @Bean
     public RestTemplate getRestTemplate(){

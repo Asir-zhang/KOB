@@ -90,7 +90,7 @@
                                             <textarea v-model="bot.description" class="form-control" id="add-bot-description" rows="2" placeholder="请输入Bot简介"></textarea>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="add-bot-code" class="form-label">代码</label>
+                                            <label for="add-bot-code" class="form-label">代码(定义的类名为Bot)</label>
                                             <VAceEditor
                                                 v-model:value="bot.content"
                                                 @init="editorInit"
