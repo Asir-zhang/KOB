@@ -41,7 +41,7 @@ export default {
 
     const register = () => {
       $.ajax({
-        url: "http://localhost:8081/user/account/register/",
+        url: "http://1.116.159.244:34567/user/account/register/",
         type: "post",
         data: {
           username: username.value,

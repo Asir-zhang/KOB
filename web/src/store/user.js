@@ -31,7 +31,7 @@ export default {
     actions: {
         login(context,data){
             $.ajax({
-                url: "http://localhost:8081/user/account/token/",
+                url: "http://1.116.159.244:34567/user/account/token/",
                 type: "post",
                 data:{
                     username: data.username,
@@ -54,7 +54,7 @@ export default {
 
         getinfo(context,data) {
             $.ajax({
-                url: "http://localhost:8081/user/account/info/",
+                url: "http://1.116.159.244:34567/user/account/info/",
                 type: "get",
                 headers: {
                     Authorization: "Asir "+context.state.token,
