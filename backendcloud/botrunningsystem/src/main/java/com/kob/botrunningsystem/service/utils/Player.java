@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Bot {
+public class Player {
     Integer userId;
-    String botCode;
-    String input;
-    Integer status;
+    String containerId;
+    String javaName;
 }

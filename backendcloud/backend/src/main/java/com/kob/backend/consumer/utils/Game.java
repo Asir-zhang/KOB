@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.kob.backend.consumer.WebSocketServer;
 import com.kob.backend.pojo.Bot;
 import com.kob.backend.pojo.Record;
+import com.kob.backend.pojo.User;
+import org.springframework.security.core.parameters.P;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -25,7 +27,8 @@ public class Game extends Thread{
     private ReentrantLock lock = new ReentrantLock();
     private String status = "playing";      //存储游戏的状态，一开始表示进行中 playing -> finished
     private String loser = "";      //all：平局 A：A输 B：B输
-    private static final String addBotUrl = "http://127.0.0.1:8083/bot/add/";        //定义向BotRunningSystem服务发送的地址
+    private static final String addBotUrl = "http://127.0.0.1:34568/bot/add/";        //定义向BotRunningSystem服务发送的地址
+    private boolean ifStart = false;
 
     public Game(Integer rows, Integer cols, Integer inner_wall_count,
                 Integer idA, Bot botA,
@@ -148,11 +151,11 @@ public class Game extends Thread{
         }
         return getMapString()+"#"+
                 me.getSx()+"#"+
-                me.getSy()+"#("+        //因为操作序列为空，所以在使用split函数的时候无法达到要求，故加上一个括号
-                me.getStepsString()+")#"+
+                me.getSy()+"#A"+        //因为操作序列为空，所以在使用split函数的时候无法达到要求，故加上一个括号
+                me.getStepsString()+"A#"+
                 you.getSx()+"#"+
-                you.getSy()+"#("+
-                you.getStepsString()+")";
+                you.getSy()+"#A"+
+                you.getStepsString()+"A";
     }
 
     private void sendBotCode(Player player){        //是否是由bot来执行，是的话就向另一个服务发送执行代码
@@ -161,17 +164,31 @@ public class Game extends Thread{
         data.add("user_id",player.getId().toString());
         data.add("bot_code",player.getBotCode());
         data.add("input",getInput(player));
+        if(player.getSteps() == null || player.getSteps().isEmpty()){       //如果是空的，表示刚开始
+            data.add("status","0");
+        } else {
+            data.add("status","1");     //否则表示正在走
+        }
         WebSocketServer.restTemplate.postForObject(addBotUrl,data,String.class);
     }
 
     private boolean nextStep(){     //等待两名玩家的下一步操作
-//这一步是非常必须的，要不然可能会造成前端来不及绘图就结束的情况
-/*原因详解：消息发送过快，前端未及时绘图，数据丢失
+//这一步是非常必须的，要不然可能会造成前端接受不了前几步的情况
+/*原因详解：前端有TimeOut函数，有2s时间
 * */
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(!ifStart){       //刚刚开始
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            ifStart = true;
+        } else {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         sendBotCode(playerA);
         sendBotCode(playerB);
@@ -202,6 +219,22 @@ public class Game extends Thread{
         resp.put("loser",loser);
         sendAllMessage(resp.toJSONString());
         saveToDatabase();
+        sendRmContainer(playerA,playerB);
+    }
+
+    private void sendRmContainer(Player playerA, Player playerB){       //游戏结束，关闭代码运行容器
+        MultiValueMap<String,String> data = new LinkedMultiValueMap<>();
+        data.add("user_id",playerA.getId().toString());
+        data.add("bot_code",playerA.getBotCode());
+        data.add("input",getInput(playerA));
+        data.add("status","2");         //2表示结束啦
+        WebSocketServer.restTemplate.postForObject(addBotUrl,data,String.class);
+        MultiValueMap<String,String> data2 = new LinkedMultiValueMap<>();
+        data2.add("user_id",playerB.getId().toString());
+        data2.add("bot_code",playerB.getBotCode());
+        data2.add("input",getInput(playerB));
+        data2.add("status","2");
+        WebSocketServer.restTemplate.postForObject(addBotUrl,data2,String.class);
     }
 
     //判断A是否撞墙，是否撞自己，是否撞B
@@ -263,7 +296,27 @@ public class Game extends Thread{
         return res.toString();
     }
 
+    private void updateUserRating(Player player,Integer rating){        //更新天梯积分
+        User user = WebSocketServer.userMapper.selectById(player.getId());
+        user.setRating(rating);
+        WebSocketServer.userMapper.updateById(user);
+    }
+
     private void saveToDatabase(){      //保存对局信息
+        //先更新天梯积分
+        Integer ratingA = WebSocketServer.userMapper.selectById(playerA.getId()).getRating();
+        Integer ratingB = WebSocketServer.userMapper.selectById(playerB.getId()).getRating();
+
+        if("A".equals(loser)){
+            ratingA -= 3;
+            ratingB += 6;
+        } else if("B".equals(loser)){
+            ratingA += 6;
+            ratingB -= 3;
+        }
+        updateUserRating(playerA,ratingA);
+        updateUserRating(playerB,ratingB);
+
         Record record = new Record(
                 null,
                 playerA.getId(),

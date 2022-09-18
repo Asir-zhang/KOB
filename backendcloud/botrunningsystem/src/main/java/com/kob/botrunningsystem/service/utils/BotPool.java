@@ -13,16 +13,16 @@ public class BotPool extends Thread{
     private final Queue<Bot> bots = new LinkedList<>();       //我们会自己管理成线程安全
 
     private void consume(Bot bot){      //消费这个任务
-        //以后想扩展支持更多语言，或者想要更加安全的话（放进一个沙箱），可以将这里的代码改为Docker的执行
-        //这里实现的是简单版，用joor动态编译执行java代码，另外为了让代码的运行时间可控，需要新开一个线程
+        String sourcePath = "/home/lighthouse/docker/docker_botrunning/codes";      //代码在本机的存储位置
+
         Consumer consumer = new Consumer();
-        consumer.startTimeout(2000,bot);        //一个bot只让他执行2s
+        consumer.startTimeout(2500,bot);        //一个bot只让他执行2s
     }
 
-    public void addBot(Integer userId,String botCode,String input){
+    public void addBot(Integer userId,String botCode,String input,Integer status){
         lock.lock();
         try{
-            bots.add(new Bot(userId,botCode,input));
+            bots.add(new Bot(userId,botCode,input,status));
             condition.signalAll();      //加入了一个，就要唤醒了
         } finally {
             lock.unlock();

@@ -27,13 +27,13 @@ public class WebSocketServer {
     public static final ConcurrentHashMap<Integer,WebSocketServer> users = new ConcurrentHashMap<>();      //当前连接信息
     private User user;
     private Session session = null;         //每个链接用这个维护
-    private static UserMapper userMapper;
+    public static UserMapper userMapper;
     public Game game = null;
     public static RecordMapper recordMapper;
     private static BotMapper botMapper;
     public static RestTemplate restTemplate;
-    private static final String addPlayerUrl = "http://localhost:8082/player/add/";
-    private static final String removePlayerUrl = "http://localhost:8082/player/remove/";
+    private static final String addPlayerUrl = "http://127.0.0.1:34569/player/add/";
+    private static final String removePlayerUrl = "http://127.0.0.1:34569/player/remove/";
 
     @Autowired
     public void setUserMapper(UserMapper userMapper){       //这一步是为了解决spring容器的单例模式

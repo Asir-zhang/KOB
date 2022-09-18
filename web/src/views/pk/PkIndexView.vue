@@ -20,6 +20,7 @@ export default {
     },
     setup(){
       const store = useStore();
+      // const socketUrl = `ws://1.116.159.244:34567/websocket/${store.state.user.token}/`;
       const socketUrl = `ws://127.0.0.1:34567/websocket/${store.state.user.token}/`;
 
       store.commit("updateLoser","none");
@@ -47,7 +48,7 @@ export default {
             });
             setTimeout(() => {
               store.commit("updateStatus","playing");
-            },1500);
+            },2000);
             store.commit("updateGame",data.game);
           } else if(data.event === "move"){
               console.log(data);

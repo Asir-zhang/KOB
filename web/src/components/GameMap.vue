@@ -1,6 +1,11 @@
 <template>
-    <div class="info">
-        <button class="btn btn-warning btn-lg">hhh</button>
+    <div class="info-board">
+        <div class="info-board-text" v-if="$store.state.pk.a_id == $store.state.user.id">
+            你在 左下角
+        </div>
+        <div class="info-board-text" v-else-if="$store.state.pk.b_id == $store.state.user.id">
+            你在 右上角
+        </div>
     </div>
     <div ref="parent" class="gamemap">
         <canvas ref="canvas" tabindex="0">

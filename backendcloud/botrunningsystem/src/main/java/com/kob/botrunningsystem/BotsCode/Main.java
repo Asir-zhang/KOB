@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Bot implements com.kob.botrunningsystem.utils.BotInterface{
+class Main {
     static class Cell{
         public int x,y;
         public Cell(int x,int y){
@@ -13,31 +13,7 @@ public class Bot implements com.kob.botrunningsystem.utils.BotInterface{
         }
     }
 
-    private boolean check_tail_increasing(int step){       //判断蛇是否伸长
-        if(step <= 8) return true;
-        return step%3 == 1;
-    }
-
-    public List<Cell> getCells(int sx,int sy,String steps){
-        int[] dx = {-1,0,1,0},dy = {0,1,0,-1};
-        List<Cell> res = new ArrayList<>();
-        int x = sx,y = sy;
-        res.add(new Cell(x,y));
-        int step = 0;
-        for(int i = 0;i < steps.length();i++){
-            int d = steps.charAt(i)-'0';
-            x += dx[d];
-            y += dy[d];
-            res.add(new Cell(x,y));
-            if(!check_tail_increasing(++ step)){
-                res.remove(0);
-            }
-        }
-        return res;
-    }
-
-    @Override
-    public Integer nextMove(String input) {
+    public int nextStep(String input){
         String[] strs = input.split("#");
         int[][] g = new int[13][14];
         for(int i = 0,k = 0;i < 13;i++)
@@ -50,11 +26,11 @@ public class Bot implements com.kob.botrunningsystem.utils.BotInterface{
         int bSx = Integer.parseInt(strs[4]),bSy = Integer.parseInt(strs[5]);
         String aSteps = strs[3].substring(1,strs[3].length()-1),bSteps = strs[6].substring(1,strs[6].length()-1);
 
-        List<Cell> aCells = getCells(aSx,aSy,aSteps);
-        List<Cell> bCells = getCells(bSx,bSy,bSteps);
+        List<Main.Cell> aCells = getCells(aSx,aSy,aSteps);
+        List<Main.Cell> bCells = getCells(bSx,bSy,bSteps);
 
-        for(Cell c:aCells) g[c.x][c.y] = 1;
-        for(Cell c:bCells) g[c.x][c.y] = 1;
+        for(Main.Cell c:aCells) g[c.x][c.y] = 1;
+        for(Main.Cell c:bCells) g[c.x][c.y] = 1;
 
         int[] dx = {-1,0,1,0},dy = {0,1,0,-1};
 
@@ -66,6 +42,29 @@ public class Bot implements com.kob.botrunningsystem.utils.BotInterface{
             }
         }
         return 0;
+    }
+
+    private boolean check_tail_increasing(int step){       //判断蛇是否伸长
+        if(step <= 8) return true;
+        return step%3 == 1;
+    }
+
+    public List<Main.Cell> getCells(int sx, int sy, String steps){
+        int[] dx = {-1,0,1,0},dy = {0,1,0,-1};
+        List<Main.Cell> res = new ArrayList<>();
+        int x = sx,y = sy;
+        res.add(new Main.Cell(x,y));
+        int step = 0;
+        for(int i = 0;i < steps.length();i++){
+            int d = steps.charAt(i)-'0';
+            x += dx[d];
+            y += dy[d];
+            res.add(new Main.Cell(x,y));
+            if(!check_tail_increasing(++ step)){
+                res.remove(0);
+            }
+        }
+        return res;
     }
 
     private int[] getI(){
